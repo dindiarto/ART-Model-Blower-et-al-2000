@@ -1,0 +1,112 @@
+---
+title: "Replicating the ART model described in Blower et al. (2000)"
+author: "Dony Indiarto"
+date: "02/08/2020"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(deSolve)
+library(magrittr)
+library(dplyr)
+library(patchwork)
+library(ggplot2)
+```
+
+### Abstract
+
+The effect of antiretroviral therapy (ART) in preventing human immunodeficiency virus (HIV) infections and averting acquired immunodeficiency syndrome (AIDS) deaths in the San Francisco gay community over the next 10 years was predicted. A transmission model was coupled with a statistical approach that enabled inclusion of a high degree of uncertainty in the potential treatment effects of ART (in terms of infectivity and survival), increase in risky behavior, and rate of emergence of drug resistance. Increasing the usage of ART in San Francisco would decrease the AIDS death rate and could substantially reduce the incidence rate.
+
+![](data/phillips1996.PNG)  
+
+### A. Variables
+
+$X(𝑡):$ number of uninfected individuals (number, $X(𝑡)≥ 0$).
+
+$Y_U (t)$: number of untreated HIV+ individuals (number, $Y_U(𝑡)≥ 0$).
+
+$Y_T (t)$: number of treated HIV+ individuals (number, $Y_T(𝑡)≥ 0$).
+
+
+### B. Parameters
+
+𝜋: the rate at which HIV - men join the gay community in SF. 
+
+𝜇: the rate at which gay men leave the sexually active community
+
+$c$: the number of partners per year whom risky sex occurs (before ART)
+
+$c(1+i)$: the number of partners per year with whom risky sex occurs (after ART)
+
+$\beta_U$: chance of infection per HIV+ partner (untreated) with whom risky sex occurs
+
+$\beta_R$: chance of infection per HIV+ partner (treated) with whom risky sex occurs
+
+$\lambda(t)$: force infection per partner; $\lambda (t) = \frac{\beta_U Y_U(t) + \beta_T Y_T(t)}{X(t) + Y_U(t) + Y_T(t)}$
+
+$\sigma$: the rate at which untreated HIV+ men enter treatment
+
+$g$: the rate at which treated HIV+ men abandon treatment
+
+$v_U$: the death rate of untreated HIV+ men from AIDS (expected survival of 12 years following infection).
+
+$v_T$: the death rate of treated HIV+ men from AIDS (expected survival of 27 years following infection).
+
+$i$: the measure of risky behaviour (unprotected sex).
+
+---  
+
+### C. Differential equations
+
+$$\frac{dX(t)}{dt} = \pi - c(1+i)\lambda(t) X(t) - \mu X(t),$$
+$$\frac{dY_U(t)}{dt} =c(1+i) \lambda (t) X(t) + gY_T (t)- \sigma Y_U(t) - \mu Y_U(t) - v_U Y_U(t),$$
+$$\frac{dY_T(t)}{dt} = \sigma Y_U (t) - g Y_T (t) - \mu Y_T(t) - v_T Y_T(t).$$
+
+### D. The model
+
+```{r warning=FALSE}
+# Timestep
+t <- seq(0,120, by = 1)
+
+# Variables
+individuals <- c(X = 200, 
+           Yu = 0,
+           Yt = 4e-07)
+
+# Model parameters
+params <- c(pi = 2133, 
+            mu  = 1/30, 
+            c  = 1.7, 
+            c_p = 1.7 + 1,
+            beta_u  = 0.1, 
+            beta_t = 0.025, 
+           # lambda = varies,
+            sigma  = 0.5,
+            g = 0.05,
+            vu = 1/12 ,
+            vt = 1/27)
+
+# Equations
+source("R/Blower_et_al_2000_equations.R")
+
+# Solve the equations
+s_ART <-
+  ode(
+    y = individuals,
+    times = t,
+    func = behaviours,
+    parms = params,
+    method = "rk4")
+
+s_ART <-  as.data.frame(s_ART)
+
+# load the plotting functions
+source("R/Blower_et_al_2000_viz.R")
+
+# produce plots
+blower_a + blower_b
+```
+
