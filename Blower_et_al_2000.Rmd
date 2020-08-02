@@ -69,12 +69,14 @@ $$\frac{dY_T(t)}{dt} = \sigma Y_U (t) - g Y_T (t) - \mu Y_T(t) - v_T Y_T(t).$$
 
 ```{r warning=FALSE}
 # Timestep
-t <- seq(0,120, by = 1)
+t <- seq(0,10, by = 0.5)
 
 # Variables
-individuals <- c(X = 200, 
-           Yu = 0,
-           Yt = 4e-07)
+individuals <- c(X = 1, 
+           Yu = 1,
+           Yt = 1,
+           N = 1,
+           lambda= 1)
 
 # Model parameters
 params <- c(pi = 2133, 
@@ -83,7 +85,7 @@ params <- c(pi = 2133,
             c_p = 1.7 + 1,
             beta_u  = 0.1, 
             beta_t = 0.025, 
-           # lambda = varies,
+           #lambda = 0.1,
             sigma  = 0.5,
             g = 0.05,
             vu = 1/12 ,
